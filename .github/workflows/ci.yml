@@ -1,0 +1,12 @@
+name: CI
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jirutka/setup-alpine@master
+        with:
+          branch: v3.12
+      - run: cat "$1"
+        shell: alpine {0}

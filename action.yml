@@ -1,0 +1,49 @@
+name: Setup Alpine Linux
+description: Setup Alpine Linux (WIP)
+inputs:
+  arch:
+    description: CPU architecture to emulate using QEMU
+    required: false
+    default: x86_64
+  branch:
+    description: Alpine branch to install
+    required: false
+    default: latest-stable
+  extra-repositories:
+    description: >
+      Additional Alpine repositories to add into /etc/apk/repositories
+      (Alpine's official main and community repositories are always added).
+    required: false
+    default: ''
+  packages:
+    description: Alpine packages to install
+    required: false
+    default: build-base ca-certificates ssl_client
+runs:
+  using: composite
+  steps:
+    - run: |
+        wget https://raw.githubusercontent.com/alpinelinux/alpine-chroot-install/v0.12.1/alpine-chroot-install
+        echo '5571ad4d17d14bb09ad23a75060f05553786e564  alpine-chroot-install' | sha1sum -c
+        chmod +x alpine-chroot-install
+        pwd
+      shell: bash
+    - run: |
+        sudo ./alpine-chroot-install \
+          -a "${{ inputs.arch }}" \
+          -b "${{ inputs.branch }}" \
+          -r "${{ inputs.extra-repositories }}" \
+          -p "${{ inputs.packages }}" \
+          -m "http://dl-cdn.alpinelinux.org/alpine" \
+          -k ".*" \
+          -i "$(pwd)" \
+          -d "/alpine-${{ inputs.branch }}-${{ inputs.arch }}"
+      shell: bash
+    - run: |
+        cat > alpine <<EOF
+        #!/bin/sh
+        env
+        cat "$1"
+        EOF
+        sudo install -m755 alpine /usr/local/bin/alpine
+      shell: bash
