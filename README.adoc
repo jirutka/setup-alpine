@@ -1,0 +1,99 @@
+= Setup Alpine GitHub Action
+:proj-name: setup-alpine
+:gh-name: jirutka/{proj-name}
+:gh-branch: master
+:action-ref: {gh-name}@{gh-branch}
+
+
+== Examples
+
+[source, yaml, subs="+attributes"]
+----
+runs-on: ubuntu-latest
+steps:
+  - name: Checkout your repository
+    uses: actions/checkout@v2
+
+  - name: Setup latest Alpine Linux
+    uses: {action-ref}
+
+  - name: Run script inside Alpine chroot as the default user (unprivileged)
+    run: |
+      cat /etc/alpine-release
+      ls -la  # as you would expect, you're in your project's directory
+    shell: alpine-sh {0}
+
+  - name: Run script inside Alpine chroot as root
+    run: apk add nodejs
+    shell: alpine-sh --root {0}
+
+  - name: Run script on the host system (Ubuntu)
+    run: cat /etc/os-release
+----
+
+[source, yaml, subs="+attributes"]
+----
+runs-on: ubuntu-latest
+steps:
+  - name: Setup Alpine Linux v3.15 for aarch64
+    uses: {action-ref}
+    with:
+      arch: aarch64
+      branch: v3.15
+
+  - name: Run script inside Alpine chroot with aarch64 emulation
+    run: uname -m
+    shell: alpine-sh {0}
+----
+
+[source, yaml, subs="+attributes"]
+----
+- name: Setup latest Alpine Linux with build-base and cargo packages
+  uses: {action-ref}
+  with:
+    packages: build-base cargo
+----
+
+[source, yaml, subs="+attributes"]
+----
+- name: Setup latest Alpine Linux with packages from the testing repository
+  uses: {action-ref}
+  with:
+    packages: some-pkg-from-testing
+    extra-repositories: |
+      http://dl-cdn.alpinelinux.org/alpine/edge/testing
+----
+
+
+== Inputs
+
+arch::
+CPU architecture to emulate using QEMU.
+Allowed values are: `x86_64` (native), `x86`, `aarch64`, `armhf` footnote:[armhf is armv6 with hard-float.], `armv7`, `ppc64le`, `riscv64` footnote:[riscv64 is available only for branch `edge` for now.], and `s390x`.
++
+Default: `x86_64`
+
+branch::
+Alpine branch (aka release) to install (e.g. `v3.15`, `latest-stable`, `edge`).
++
+Default: `latest-stable`
+
+extra-repositories::
+Additional Alpine repositories to add into _/etc/apk/repositories_ (Alpine’s official _main_ and _community_ repositories are always added).
+
+packages::
+Alpine packages to install.
++
+Default: _no extra packages_
+
+
+== Outputs
+
+root-path::
+Path to the created Alpine root directory (also exposed in environment variable `ALPINE_ROOT_PATH`).
+
+
+== License
+
+This project is licensed under http://opensource.org/licenses/MIT/[MIT License].
+For the full text of the license, see the link:LICENSE[LICENSE] file.

@@ -1,0 +1,52 @@
+name: CI
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        alpine:
+          - latest-stable
+          - edge
+        arch:
+          - x86_64
+          - aarch64  # emulated
+    steps:
+      - name: Setup Alpine Linux ${{ matrix.alpine }} ${{ matrix.arch }}
+        uses: jirutka/setup-alpine@master
+        with:
+          arch: ${{ matrix.arch }}
+          branch: ${{ matrix.alpine }}
+        id: setup-alpine
+
+      - name: Output environment
+        run: |
+          uname -a
+          cat /etc/os-release
+          env
+        shell: alpine-sh {0}
+
+      - name: Check that 'uname -m' returns ${{ matrix.arch }}
+        run: |
+          uname -m
+          test "$(uname -m)" = "${{ matrix.arch }}"
+        shell: alpine-sh {0}
+
+      - name: Check that $USER is 'runner' when shell is 'alpine-sh {0}'
+        run: |
+          id -un
+          test "$(id -un)" = 'runner'
+        shell: alpine-sh {0}
+
+      - name: Check that $USER is 'root' when shell is 'alpine-sh --root {0}'
+        run: |
+          id -un
+          test "$(id -un)" = 'root'
+        shell: alpine-sh --root {0}
+
+      - name: Check that $ALPINE_ROOT_PATH is set and points to the chroot dir
+        run: test -f "$ALPINE_ROOT_PATH"/etc/alpine-release
+
+      - name: Check that steps.<step>.outputs.root-path is set and points to the chroot dir
+        run: test -f "${{ steps.setup-alpine.outputs.root-path }}"/etc/alpine-release

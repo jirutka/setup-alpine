@@ -1,0 +1,79 @@
+name: Setup Alpine Linux
+description: Setup Alpine Linux (WIP)
+inputs:
+  arch:
+    description: >
+      CPU architecture to emulate using QEMU. Allowed values are: `x86_64` (native), `x86`,
+      `aarch64`, `armhf` (armv6 with hard-float), `armv7`, `ppc64le`, `riscv64` (available only
+      for branch `edge`), and `s390x`
+    required: false
+    default: x86_64
+  branch:
+    description: Alpine branch (aka release) to install (e.g. `v3.15`, `latest-stable`, `edge`).
+    required: false
+    default: latest-stable
+  extra-repositories:
+    description: >
+      Additional Alpine repositories to add into /etc/apk/repositories (Alpine's official main and
+      community repositories are always added).
+    required: false
+    default: ''
+  packages:
+    description: Alpine packages to install.
+    required: false
+    default: ''
+outputs:
+  root-path:
+    description: >
+      Path to the created Alpine root directory (also exposed in environment
+      variable ALPINE_ROOT_PATH).
+    value: ${{ steps.vars.outputs.root-path }}
+
+runs:
+  using: composite
+  steps:
+    # TODO: Replace alpine-chroot-install with a derivate (re)written specifically
+    #  for setup-alpine and stored in this repository.
+    - run: |
+        wget -T 10 --no-verbose https://raw.githubusercontent.com/alpinelinux/alpine-chroot-install/v0.13.3/alpine-chroot-install
+        echo 'c3005e323029637db20ec9595243ac94bb9b2226  alpine-chroot-install' | sha1sum -c
+        chmod +x alpine-chroot-install
+        # TODO: Remove after update to v0.13.4
+        sed -i 's/apt-get install /&-o=Dpkg::Use-Pty=0 /' alpine-chroot-install
+      shell: bash
+
+    - id: vars
+      run: |
+        export ALPINE_ROOT_PATH="$HOME/rootfs/alpine-${{ inputs.branch }}-${{ inputs.arch }}"
+        echo "ALPINE_ROOT_PATH=$ALPINE_ROOT_PATH" >> $GITHUB_ENV
+        echo "::set-output name=root-path::$ALPINE_ROOT_PATH"
+      shell: bash
+
+    - run: |
+        sudo ./alpine-chroot-install \
+          -a "${{ inputs.arch }}" \
+          -b "${{ inputs.branch }}" \
+          -r "${{ inputs.extra-repositories }}" \
+          -p "${{ inputs.packages }}" \
+          -k ".*" \
+          -i "/home/runner/work" \
+          -d "$ALPINE_ROOT_PATH"
+        rm alpine-chroot-install
+      shell: bash
+
+    - run: |
+        cat > alpine-sh <<EOF
+        #!/bin/sh
+        case "\$1" in
+            -r | --root) USER=root; shift;;
+        esac
+        exec "$ALPINE_ROOT_PATH"/enter-chroot -u \$USER sh -eo pipefail "\$@"
+        EOF
+        sudo install -D -m755 alpine-sh -t "$ALPINE_ROOT_PATH"/xbin/
+        rm alpine-sh
+        echo "$ALPINE_ROOT_PATH/xbin" >> $GITHUB_PATH
+      shell: bash
+
+    - uses: webiny/action-post-run@2.0.1
+      with:
+        run: ${{ steps.vars.outputs.root-path }}/destroy --remove
