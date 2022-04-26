@@ -110,6 +110,12 @@ Alpine packages to install.
 +
 Default: _no extra packages_
 
+shell-name::
+Name of the script to run `sh` in the Alpine chroot that will be added to `GITHUB_PATH`.
+This name should be used in `jobs.<job_id>.steps[*].shell` (e.g. `shell: alpine-sh {0}`) to run the step’s script in the chroot.
++
+Default: `alpine-sh`
+
 
 == Outputs
 

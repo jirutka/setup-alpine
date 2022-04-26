@@ -55,11 +55,13 @@ jobs:
         uses: jirutka/setup-alpine@master
         with:
           arch: x86_64
+          shell-name: alpine-x86_64-sh
 
       - name: Install latest Alpine Linux aarch64
         uses: jirutka/setup-alpine@master
         with:
           arch: aarch64
+          shell-name: alpine-aarch64-sh
 
       - name: Check that shell 'alpine-x86_64-sh {0}' is x86_64
         run: |
@@ -68,12 +70,6 @@ jobs:
         shell: alpine-x86_64-sh {0}
 
       - name: Check that shell 'alpine-aarch64-sh {0}' is aarch64
-        run: |
-          uname -m
-          test "$(uname -m)" = 'aarch64'
-        shell: alpine-aarch64-sh {0}
-
-      - name: Check that shell 'alpine-sh {0}' is the latest one (aarch64)
         run: |
           uname -m
           test "$(uname -m)" = 'aarch64'
