@@ -64,6 +64,30 @@ steps:
       http://dl-cdn.alpinelinux.org/alpine/edge/testing
 ----
 
+[source, yaml, subs="+attributes"]
+----
+runs-on: ubuntu-latest
+steps:
+  - name: Setup latest Alpine Linux for aarch64
+    uses: {gh-name}@{version}
+    with:
+      arch: aarch64
+
+  - name: Setup latest Alpine Linux for x86_64
+    uses: {gh-name}@{version}
+
+  - name: Run script inside Alpine chroot
+    run: uname -m
+    shell: alpine-x86_64-sh {0}
+
+  - name: Run script inside Alpine chroot with aarch64 emulation
+    run: uname -m
+    shell: alpine-aarch64-sh {0}
+
+  - name: Run script on the host system (Ubuntu)
+    run: cat /etc/os-release
+----
+
 
 == Inputs
 
@@ -90,7 +114,7 @@ Default: _no extra packages_
 == Outputs
 
 root-path::
-Path to the created Alpine root directory (also exposed in environment variable `ALPINE_ROOT_PATH`).
+Path to the created Alpine root directory.
 
 
 == License

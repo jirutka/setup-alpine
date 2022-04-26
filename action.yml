@@ -27,7 +27,7 @@ outputs:
     description: >
       Path to the created Alpine root directory (also exposed in environment
       variable ALPINE_ROOT_PATH).
-    value: ${{ steps.vars.outputs.root-path }}
+    value: ${{ steps.install.outputs.root-path }}
 
 runs:
   using: composite
@@ -42,14 +42,9 @@ runs:
         sed -i 's/apt-get install /&-o=Dpkg::Use-Pty=0 /' alpine-chroot-install
       shell: bash
 
-    - id: vars
+    - id: install
       run: |
-        export ALPINE_ROOT_PATH="$HOME/rootfs/alpine-${{ inputs.branch }}-${{ inputs.arch }}"
-        echo "ALPINE_ROOT_PATH=$ALPINE_ROOT_PATH" >> $GITHUB_ENV
-        echo "::set-output name=root-path::$ALPINE_ROOT_PATH"
-      shell: bash
-
-    - run: |
+        ROOT_PATH="$HOME/rootfs/alpine-${{ inputs.branch }}-${{ inputs.arch }}"
         sudo ./alpine-chroot-install \
           -a "${{ inputs.arch }}" \
           -b "${{ inputs.branch }}" \
@@ -57,23 +52,28 @@ runs:
           -p "${{ inputs.packages }}" \
           -k ".*" \
           -i "/home/runner/work" \
-          -d "$ALPINE_ROOT_PATH"
+          -d "$ROOT_PATH"
         rm alpine-chroot-install
+        echo "::set-output name=root-path::$ROOT_PATH"
       shell: bash
 
     - run: |
-        cat > alpine-sh <<EOF
+        arch=${{ inputs.arch }}
+
+        sudo install -D -m755 /dev/stdin "$ROOT_PATH/xbin/alpine-$arch-sh" <<EOF
         #!/bin/sh
         case "\$1" in
             -r | --root) USER=root; shift;;
         esac
-        exec "$ALPINE_ROOT_PATH"/enter-chroot -u \$USER sh -eo pipefail "\$@"
+        exec "$ROOT_PATH"/enter-chroot -u \$USER sh -eo pipefail "\$@"
         EOF
-        sudo install -D -m755 alpine-sh -t "$ALPINE_ROOT_PATH"/xbin/
-        rm alpine-sh
-        echo "$ALPINE_ROOT_PATH/xbin" >> $GITHUB_PATH
+
+        sudo ln -s "alpine-$arch-sh" $ROOT_PATH/xbin/alpine-sh
+        echo "$ROOT_PATH/xbin" >> $GITHUB_PATH
+      env:
+        ROOT_PATH: ${{ steps.install.outputs.root-path }}
       shell: bash
 
     - uses: webiny/action-post-run@2.0.1
       with:
-        run: ${{ steps.vars.outputs.root-path }}/destroy --remove
+        run: ${{ steps.install.outputs.root-path }}/destroy --remove
