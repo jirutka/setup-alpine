@@ -56,12 +56,14 @@ jobs:
         with:
           arch: x86_64
           shell-name: alpine-x86_64-sh
+        id: alpine-x86_64
 
       - name: Install latest Alpine Linux aarch64
         uses: jirutka/setup-alpine@master
         with:
           arch: aarch64
           shell-name: alpine-aarch64-sh
+          volumes: ${{ steps.alpine-x86_64.outputs.root-path }}:/mnt/alpine-x86_64
 
       - name: Check that shell 'alpine-x86_64-sh {0}' is x86_64
         run: |
@@ -73,4 +75,8 @@ jobs:
         run: |
           uname -m
           test "$(uname -m)" = 'aarch64'
+        shell: alpine-aarch64-sh {0}
+
+      - name: Check that x86_64 chroot is bind in aarch64 chroot
+        run: test -f /mnt/alpine-x86_64/etc/alpine-release
         shell: alpine-aarch64-sh {0}

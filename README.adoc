@@ -116,6 +116,14 @@ This name should be used in `jobs.<job_id>.steps[*].shell` (e.g. `shell: alpine-
 +
 Default: `alpine-sh`
 
+volumes::
+A list of directories on the host system to mount bind into the chroot.
+You can specify the source and destination path: `<src-dir>:<dest-dir>`.
+The `<src-dir>` is an absolute path of existing directory on the host system, `<dest-dir>` is an absolute path in the chroot (it will be created if doesn’t exist).
+You can omit the latter if they're the same.
++
+Please note that _/home/runner/work_ (where’s your workspace located) is always mounted, don’t specify it here.
+
 
 == Outputs
 

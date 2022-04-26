@@ -29,6 +29,17 @@ inputs:
       run the step's script in the chroot.
     required: false
     default: alpine-sh
+  volumes:
+    description: >
+      A list of directories on the host system to mount bind into the chroot. You can specify the
+      source and destination path: `<src-dir>:<dest-dir>``. The `<src-dir>` is an absolute path of
+      existing directory on the host system, `<dest-dir>` is an absolute path in the chroot
+      (it will be created if doesn't exist). You can omit the latter if they're the same.
+
+      Please note that /home/runner/work (where's your workspace located) is always mounted,
+      don't specify it here.
+    required: false
+    default: ''
 outputs:
   root-path:
     description: >
@@ -62,6 +73,20 @@ runs:
           -d "$ROOT_PATH"
         rm alpine-chroot-install
         echo "::set-output name=root-path::$ROOT_PATH"
+      shell: bash
+
+    - run: |
+        for vol in ${{ inputs.volumes }}; do
+            [ "$vol" ] || continue
+            src=${vol%%:*}
+            dst=${vol#*:}
+
+            sudo mkdir -p "$ROOT_PATH/$dst"
+            sudo mount -v --bind "$src" "$ROOT_PATH/$dst"
+            sudo mount --make-private "$ROOT_PATH/$dst"
+        done
+      env:
+        ROOT_PATH: ${{ steps.install.outputs.root-path }}
       shell: bash
 
     - run: |
