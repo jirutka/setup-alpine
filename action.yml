@@ -1,9 +1,20 @@
 name: Setup Alpine Linux
 description: Setup Alpine Linux (WIP)
+author: Jakub Jirutka <jakub@jirutka.cz>
+branding:
+  color: blue
+  icon: terminal
 inputs:
+  apk-tools-url:
+    description: >
+      URL of the apk-tools static binary to use. It must end with `#!sha256!` followed by a SHA-256
+      hash of the file.
+      This should normally be left at the default value.
+    required: false
+    default: https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.12.9/x86_64/apk.static#!sha256!5176da3d4c41f12a08b82809aca8e7e2e383b7930979651b8958eca219815af5
   arch:
     description: >
-      CPU architecture to emulate using QEMU. Allowed values are: `x86_64` (native), `x86`,
+      CPU architecture to emulate using QEMU. Allowed values are: `x86_64` (native), `x86` (native),
       `aarch64`, `armhf` (armv6 with hard-float), `armv7`, `ppc64le`, `riscv64` (available only
       for branch `edge`), and `s390x`
     required: false
@@ -14,12 +25,16 @@ inputs:
     default: latest-stable
   extra-repositories:
     description: >
-      Additional Alpine repositories to add into /etc/apk/repositories (Alpine's official main and
-      community repositories are always added).
+      A list of additional Alpine repositories to add into /etc/apk/repositories (Alpine's official
+      main and community repositories are always added).
     required: false
     default: ''
+  mirror-url:
+    description: URL of an Alpine Linux mirror to fetch packages from.
+    required: false
+    default: http://dl-cdn.alpinelinux.org/alpine
   packages:
-    description: Alpine packages to install.
+    description: A list of Alpine packages to install.
     required: false
     default: ''
   shell-name:
@@ -28,7 +43,7 @@ inputs:
       This name should be used in `jobs.<job_id>.steps[*].shell` (e.g. `shell: alpine.sh {0}`) to
       run the step's script in the chroot.
     required: false
-    default: alpine-sh
+    default: alpine.sh
   volumes:
     description: >
       A list of directories on the host system to mount bind into the chroot. You can specify the
@@ -45,66 +60,25 @@ outputs:
     description: >
       Path to the created Alpine root directory (also exposed in environment
       variable ALPINE_ROOT_PATH).
-    value: ${{ steps.install.outputs.root-path }}
+    value: ${{ steps.setup.outputs.root-path }}
 
 runs:
   using: composite
   steps:
-    # TODO: Replace alpine-chroot-install with a derivate (re)written specifically
-    #  for setup-alpine and stored in this repository.
-    - run: |
-        wget -T 10 --no-verbose https://raw.githubusercontent.com/alpinelinux/alpine-chroot-install/v0.13.3/alpine-chroot-install
-        echo 'c3005e323029637db20ec9595243ac94bb9b2226  alpine-chroot-install' | sha1sum -c
-        chmod +x alpine-chroot-install
-        # TODO: Remove after update to v0.13.4
-        sed -i 's/apt-get install /&-o=Dpkg::Use-Pty=0 /' alpine-chroot-install
-      shell: bash
-
-    - id: install
-      run: |
-        ROOT_PATH="$HOME/rootfs/alpine-${{ inputs.branch }}-${{ inputs.arch }}"
-        sudo ./alpine-chroot-install \
-          -a "${{ inputs.arch }}" \
-          -b "${{ inputs.branch }}" \
-          -r "${{ inputs.extra-repositories }}" \
-          -p "${{ inputs.packages }}" \
-          -k ".*" \
-          -i "/home/runner/work" \
-          -d "$ROOT_PATH"
-        rm alpine-chroot-install
-        echo "::set-output name=root-path::$ROOT_PATH"
-      shell: bash
-
-    - run: |
-        for vol in ${{ inputs.volumes }}; do
-            [ "$vol" ] || continue
-            src=${vol%%:*}
-            dst=${vol#*:}
-
-            sudo mkdir -p "$ROOT_PATH/$dst"
-            sudo mount -v --bind "$src" "$ROOT_PATH/$dst"
-            sudo mount --make-private "$ROOT_PATH/$dst"
-        done
+    - id: setup
       env:
-        ROOT_PATH: ${{ steps.install.outputs.root-path }}
-      shell: bash
-
-    - run: |
-        arch=${{ inputs.arch }}
-
-        sudo install -D -m755 /dev/stdin "$ROOT_PATH/xbin/${{ inputs.shell-name }}" <<EOF
-        #!/bin/sh
-        case "\$1" in
-            -r | --root) USER=root; shift;;
-        esac
-        exec "$ROOT_PATH"/enter-chroot -u \$USER sh -eo pipefail "\$@"
-        EOF
-
-        echo "$ROOT_PATH/xbin" >> $GITHUB_PATH
-      env:
-        ROOT_PATH: ${{ steps.install.outputs.root-path }}
+        INPUT_APK_TOOLS_URL: ${{ inputs.apk-tools-url }}
+        INPUT_ARCH: ${{ inputs.arch }}
+        INPUT_BRANCH: ${{ inputs.branch }}
+        INPUT_EXTRA_REPOSITORIES: ${{ inputs.extra-repositories }}
+        INPUT_MIRROR_URL: ${{ inputs.mirror-url }}
+        INPUT_PACKAGES: ${{ inputs.packages }}
+        INPUT_SHELL_NAME: ${{ inputs.shell-name }}
+        INPUT_VOLUMES: ${{ inputs.volumes }}
+      run: sudo -E ./setup-alpine.sh
+      working-directory: ${{ github.action_path }}
       shell: bash
 
     - uses: webiny/action-post-run@2.0.1
       with:
-        run: ${{ steps.install.outputs.root-path }}/destroy --remove
+        run: sudo "${{ steps.setup.outputs.root-path }}"/destroy.sh

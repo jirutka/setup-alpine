@@ -1,0 +1,7 @@
+This directory contain binfmt specs for Debian's update-binfmts(8) tool.
+They were extracted from package qemu-user-static_7.0+dfsg-1_amd64.deb and
+modified in the following way:
+
+1. package 'qemu-user-static' replaced with 'none'
+2. interpreter /usr/bin/qemu-<arch>-binfmt-P replaced with
+   /usr/local/bin/qemu-<arch>

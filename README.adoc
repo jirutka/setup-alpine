@@ -21,11 +21,11 @@ steps:
     run: |
       cat /etc/alpine-release
       ls -la  # as you would expect, you're in your project's directory
-    shell: alpine-sh {0}
+    shell: alpine.sh {0}
 
   - name: Run script inside Alpine chroot as root
     run: apk add nodejs
-    shell: alpine-sh --root {0}
+    shell: alpine.sh --root {0}
 
   - name: Run script on the host system (Ubuntu)
     run: cat /etc/os-release
@@ -43,7 +43,7 @@ steps:
 
   - name: Run script inside Alpine chroot with aarch64 emulation
     run: uname -m
-    shell: alpine-sh {0}
+    shell: alpine.sh {0}
 ----
 
 [source, yaml, subs="+attributes"]
@@ -68,21 +68,24 @@ steps:
 ----
 runs-on: ubuntu-latest
 steps:
+  - name: Setup latest Alpine Linux for x86_64
+    uses: {gh-name}@{version}
+    with:
+      shell-name: alpine-aarch64.sh
+
   - name: Setup latest Alpine Linux for aarch64
     uses: {gh-name}@{version}
     with:
       arch: aarch64
-
-  - name: Setup latest Alpine Linux for x86_64
-    uses: {gh-name}@{version}
+      shell-name: alpine-aarch64.sh
 
   - name: Run script inside Alpine chroot
     run: uname -m
-    shell: alpine-x86_64-sh {0}
+    shell: alpine-x86_64.sh {0}
 
   - name: Run script inside Alpine chroot with aarch64 emulation
     run: uname -m
-    shell: alpine-aarch64-sh {0}
+    shell: alpine-aarch64.sh {0}
 
   - name: Run script on the host system (Ubuntu)
     run: cat /etc/os-release
@@ -91,30 +94,46 @@ steps:
 
 == Inputs
 
+apk-tools-url::
+URL of the apk-tools static binary to use.
+It must end with `#!sha256!` followed by a SHA-256 hash of the file.
+This should normally be left at the default value.
++
+Default: _see link:action.yml[]_
+
 arch::
 CPU architecture to emulate using QEMU.
-Allowed values are: `x86_64` (native), `x86`, `aarch64`, `armhf` footnote:[armhf is armv6 with hard-float.], `armv7`, `ppc64le`, `riscv64` footnote:[riscv64 is available only for branch `edge` for now.], and `s390x`.
+Allowed values are: `x86_64` (native), `x86` (native), `aarch64`, `armhf` footnote:[armhf is armv6 with hard-float.], `armv7`, `ppc64le`, `riscv64` footnote:[riscv64 is available only for branch `edge` for now.], and `s390x`.
 +
 Default: `x86_64`
 
 branch::
-Alpine branch (aka release) to install (e.g. `v3.15`, `latest-stable`, `edge`).
+Alpine branch (aka release) to install: `vMAJOR.MINOR`, `latest-stable`, or `edge`.
 +
+Example: `v3.15` +
 Default: `latest-stable`
 
 extra-repositories::
-Additional Alpine repositories to add into _/etc/apk/repositories_ (Alpine’s official _main_ and _community_ repositories are always added).
+A list of additional Alpine repositories to add into _/etc/apk/repositories_ (Alpine’s official _main_ and _community_ repositories are always added).
++
+Example: `http://dl-cdn.alpinelinux.org/alpine/edge/testing`
+
+mirror-url::
+URL of an Alpine Linux mirror to fetch packages from.
++
+Default: `http://dl-cdn.alpinelinux.org/alpine`
 
 packages::
-Alpine packages to install.
+A list of Alpine packages to install.
 +
+Example: `build-base openssh-client` +
 Default: _no extra packages_
 
 shell-name::
 Name of the script to run `sh` in the Alpine chroot that will be added to `GITHUB_PATH`.
 This name should be used in `jobs.<job_id>.steps[*].shell` (e.g. `shell: alpine-sh {0}`) to run the step’s script in the chroot.
 +
-Default: `alpine-sh`
+Default: `alpine.sh`
 
 volumes::
 A list of directories on the host system to mount bind into the chroot.
@@ -123,6 +142,8 @@ The `<src-dir>` is an absolute path of existing directory on the host system, `<
 You can omit the latter if they're the same.
 +
 Please note that _/home/runner/work_ (where’s your workspace located) is always mounted, don’t specify it here.
++
+Example: `${{ steps.alpine-aarch64.outputs.root-path }}:/mnt/alpine-aarch64`
 
 
 == Outputs

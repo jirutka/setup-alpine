@@ -12,12 +12,15 @@ jobs:
         arch:
           - x86_64
           - aarch64  # emulated
+    env:
+      MY_JOB_VAR: 'allons-y!'
     steps:
-      - name: Setup Alpine Linux ${{ matrix.alpine }} ${{ matrix.arch }}
+      - name: Set up Alpine Linux ${{ matrix.alpine }} ${{ matrix.arch }}
         uses: jirutka/setup-alpine@master
         with:
           arch: ${{ matrix.arch }}
           branch: ${{ matrix.alpine }}
+          packages: build-base
         id: setup-alpine
 
       - name: Output environment
@@ -25,25 +28,53 @@ jobs:
           uname -a
           cat /etc/os-release
           env
-        shell: alpine-sh {0}
+        shell: alpine.sh {0}
+
+      - name: Prepare environment
+        run: echo "export MY_PROFILE_VAR=42" >> ~/.profile
+        shell: alpine.sh {0}
+
+      - name: Check that default working directory is the workspace
+        run: |
+          pwd
+          test "$(pwd)" = "${{ github.workspace }}"
+        shell: alpine.sh {0}
+
+      - name: Check that default environment variables are available
+        run: |
+          echo $GITHUB_WORKSPACE
+          test "$GITHUB_WORKSPACE" = "${{ github.workspace }}"
+        shell: alpine.sh {0}
+
+      - name: Check that job environment variables are available
+        run: |
+          echo $MY_JOB_VAR
+          test "$MY_JOB_VAR" = "${{ env.MY_JOB_VAR }}"
+        shell: alpine.sh {0}
+
+      - name: Check that ~/.profile is being sourced
+        run: |
+          echo "$MY_PROFILE_VAR"
+          test "$MY_PROFILE_VAR" = 42
+        shell: alpine.sh {0}
 
       - name: Check that 'uname -m' returns ${{ matrix.arch }}
         run: |
           uname -m
           test "$(uname -m)" = "${{ matrix.arch }}"
-        shell: alpine-sh {0}
+        shell: alpine.sh {0}
 
-      - name: Check that $USER is 'runner' when shell is 'alpine-sh {0}'
+      - name: Check that $USER is 'runner' when shell is 'alpine.sh {0}'
         run: |
           id -un
           test "$(id -un)" = 'runner'
-        shell: alpine-sh {0}
+        shell: alpine.sh {0}
 
-      - name: Check that $USER is 'root' when shell is 'alpine-sh --root {0}'
+      - name: Check that $USER is 'root' when shell is 'alpine.sh --root {0}'
         run: |
           id -un
           test "$(id -un)" = 'root'
-        shell: alpine-sh --root {0}
+        shell: alpine.sh --root {0}
 
       - name: Check that steps.<step>.outputs.root-path is set and points to the chroot dir
         run: test -f "${{ steps.setup-alpine.outputs.root-path }}"/etc/alpine-release
@@ -55,28 +86,28 @@ jobs:
         uses: jirutka/setup-alpine@master
         with:
           arch: x86_64
-          shell-name: alpine-x86_64-sh
+          shell-name: alpine-x86_64.sh
         id: alpine-x86_64
 
       - name: Install latest Alpine Linux aarch64
         uses: jirutka/setup-alpine@master
         with:
           arch: aarch64
-          shell-name: alpine-aarch64-sh
+          shell-name: alpine-aarch64.sh
           volumes: ${{ steps.alpine-x86_64.outputs.root-path }}:/mnt/alpine-x86_64
 
-      - name: Check that shell 'alpine-x86_64-sh {0}' is x86_64
+      - name: Check that shell 'alpine-x86_64.sh {0}' is x86_64
         run: |
           uname -m
           test "$(uname -m)" = 'x86_64'
-        shell: alpine-x86_64-sh {0}
+        shell: alpine-x86_64.sh {0}
 
-      - name: Check that shell 'alpine-aarch64-sh {0}' is aarch64
+      - name: Check that shell 'alpine-aarch64.sh {0}' is aarch64
         run: |
           uname -m
           test "$(uname -m)" = 'aarch64'
-        shell: alpine-aarch64-sh {0}
+        shell: alpine-aarch64.sh {0}
 
       - name: Check that x86_64 chroot is bind in aarch64 chroot
         run: test -f /mnt/alpine-x86_64/etc/alpine-release
-        shell: alpine-aarch64-sh {0}
+        shell: alpine-aarch64.sh {0}
