@@ -3,96 +3,12 @@
 :gh-name: jirutka/{proj-name}
 :gh-branch: master
 :action-ref: {gh-name}@{gh-branch}
+:alpine-latest: v3.15
 
 
-== Examples
+== Parameters
 
-[source, yaml, subs="+attributes"]
-----
-runs-on: ubuntu-latest
-steps:
-  - name: Checkout your repository
-    uses: actions/checkout@v2
-
-  - name: Setup latest Alpine Linux
-    uses: {action-ref}
-
-  - name: Run script inside Alpine chroot as the default user (unprivileged)
-    run: |
-      cat /etc/alpine-release
-      ls -la  # as you would expect, you're in your project's directory
-    shell: alpine.sh {0}
-
-  - name: Run script inside Alpine chroot as root
-    run: apk add nodejs
-    shell: alpine.sh --root {0}
-
-  - name: Run script on the host system (Ubuntu)
-    run: cat /etc/os-release
-----
-
-[source, yaml, subs="+attributes"]
-----
-runs-on: ubuntu-latest
-steps:
-  - name: Setup Alpine Linux v3.15 for aarch64
-    uses: {action-ref}
-    with:
-      arch: aarch64
-      branch: v3.15
-
-  - name: Run script inside Alpine chroot with aarch64 emulation
-    run: uname -m
-    shell: alpine.sh {0}
-----
-
-[source, yaml, subs="+attributes"]
-----
-- name: Setup latest Alpine Linux with build-base and cargo packages
-  uses: {action-ref}
-  with:
-    packages: build-base cargo
-----
-
-[source, yaml, subs="+attributes"]
-----
-- name: Setup latest Alpine Linux with packages from the testing repository
-  uses: {action-ref}
-  with:
-    packages: some-pkg-from-testing
-    extra-repositories: |
-      http://dl-cdn.alpinelinux.org/alpine/edge/testing
-----
-
-[source, yaml, subs="+attributes"]
-----
-runs-on: ubuntu-latest
-steps:
-  - name: Setup latest Alpine Linux for x86_64
-    uses: {gh-name}@{version}
-    with:
-      shell-name: alpine-aarch64.sh
-
-  - name: Setup latest Alpine Linux for aarch64
-    uses: {gh-name}@{version}
-    with:
-      arch: aarch64
-      shell-name: alpine-aarch64.sh
-
-  - name: Run script inside Alpine chroot
-    run: uname -m
-    shell: alpine-x86_64.sh {0}
-
-  - name: Run script inside Alpine chroot with aarch64 emulation
-    run: uname -m
-    shell: alpine-aarch64.sh {0}
-
-  - name: Run script on the host system (Ubuntu)
-    run: cat /etc/os-release
-----
-
-
-== Inputs
+=== Inputs
 
 apk-tools-url::
 URL of the apk-tools static binary to use.
@@ -102,7 +18,7 @@ This should normally be left at the default value.
 Default: _see link:action.yml[]_
 
 arch::
-CPU architecture to emulate using QEMU.
+CPU architecture to emulate using https://www.qemu.org/docs/master/user/main.html[QEMU user space emulator].
 Allowed values are: `x86_64` (native), `x86` (native), `aarch64`, `armhf` footnote:[armhf is armv6 with hard-float.], `armv7`, `ppc64le`, `riscv64` footnote:[riscv64 is available only for branch `edge` for now.], and `s390x`.
 +
 Default: `x86_64`
@@ -110,7 +26,7 @@ Default: `x86_64`
 branch::
 Alpine branch (aka release) to install: `vMAJOR.MINOR`, `latest-stable`, or `edge`.
 +
-Example: `v3.15` +
+Example: `{alpine-latest}` +
 Default: `latest-stable`
 
 extra-repositories::
@@ -146,10 +62,182 @@ Please note that _/home/runner/work_ (where’s your workspace located) is alway
 Example: `${{ steps.alpine-aarch64.outputs.root-path }}:/mnt/alpine-aarch64`
 
 
-== Outputs
+=== Outputs
 
 root-path::
 Path to the created Alpine root directory.
+
+
+== Usage examples
+
+=== Basic usage
+
+[source, yaml, subs="+attributes"]
+----
+runs-on: ubuntu-latest
+steps:
+  - uses: actions/checkout@v2
+
+  - name: Setup latest Alpine Linux
+    uses: {action-ref}
+
+  - name: Run script inside Alpine chroot as root
+    run: |
+      cat /etc/alpine-release
+      apk add nodejs npm
+    shell: alpine.sh --root {0}
+
+  - name: Run script inside Alpine chroot as the default user (unprivileged)
+    run: |
+      ls -la  # as you would expect, you're in your workspace directory
+      npm build
+    shell: alpine.sh {0}
+
+  - name: Run script on the host system (Ubuntu)
+    run: |
+      cat /etc/os-release
+    shell: bash
+----
+
+
+=== Set up Alpine with specified packages
+
+[source, yaml, subs="+attributes"]
+----
+- uses: {action-ref}
+  with:
+    branch: {alpine-latest}
+    packages: >
+      build-base
+      libgit2-dev
+      meson
+----
+
+
+=== Set up and use Alpine for a different CPU architecture
+
+[source, yaml, subs="+attributes"]
+----
+runs-on: ubuntu-latest
+steps:
+  - name: Setup Alpine Linux {alpine-latest} for aarch64
+    uses: {action-ref}
+    with:
+      arch: aarch64
+      branch: {alpine-latest}
+
+  - name: Run script inside Alpine chroot with aarch64 emulation
+    run: uname -m
+    shell: alpine.sh {0}
+----
+
+
+=== Set up Alpine with packages from the testing repository
+
+[source, yaml, subs="+attributes"]
+----
+- uses: {action-ref}
+  with:
+    extra-repositories: |
+      http://dl-cdn.alpinelinux.org/alpine/edge/testing
+    packages: some-pkg-from-testing
+----
+
+
+=== Set up and use multiple Alpine environments in a single job
+
+[source, yaml, subs="+attributes"]
+----
+runs-on: ubuntu-latest
+steps:
+  - name: Setup latest Alpine Linux for x86_64
+    uses: {action-ref}
+    with:
+      shell-name: alpine-aarch64.sh
+
+  - name: Setup latest Alpine Linux for aarch64
+    uses: {action-ref}
+    with:
+      arch: aarch64
+      shell-name: alpine-aarch64.sh
+
+  - name: Run script inside Alpine chroot
+    run: uname -m
+    shell: alpine-x86_64.sh {0}
+
+  - name: Run script inside Alpine chroot with aarch64 emulation
+    run: uname -m
+    shell: alpine-aarch64.sh {0}
+
+  - name: Run script on the host system (Ubuntu)
+    run: cat /etc/os-release
+    shell: bash
+----
+
+
+=== Cross-compile Rust application with system libraries
+
+[source, yaml, subs="+attributes"]
+----
+runs-on: ubuntu-latest
+strategy:
+  matrix:
+    include:
+      - rust-target: aarch64-unknown-linux-musl
+        os-arch: aarch64
+env:
+  CROSS_SYSROOT: /mnt/alpine-${{ matrix.os-arch }}
+steps:
+  - uses: actions/checkout@v1
+
+  - name: Set up Alpine Linux for ${{ matrix.os-arch }} (target arch)
+    id: alpine-target
+    uses: {action-ref}
+    with:
+      arch: ${{ matrix.os-arch }}
+      branch: edge
+      packages: >
+        dbus-dev
+        dbus-static
+      shell-name: alpine-target.sh
+
+  - name: Set up Alpine Linux for x86_64 (build arch)
+    uses: {action-ref}
+    with:
+      arch: x86_64
+      packages: >
+        build-base
+        pkgconf
+        lld
+        rustup
+      volumes: ${{ steps.alpine-target.outputs.root-path }}:${{ env.CROSS_SYSROOT }}
+      shell-name: alpine.sh
+
+  - name: Install Rust stable toolchain via rustup
+    run: rustup-init --target ${{ matrix.rust-target }} --default-toolchain stable --profile minimal -y
+    shell: alpine.sh {0}
+
+  - name: Build statically linked binary
+    env:
+      CARGO_BUILD_TARGET: ${{ matrix.rust-target }}
+      CARGO_PROFILE_RELEASE_STRIP: symbols
+      PKG_CONFIG_ALL_STATIC: '1'
+      PKG_CONFIG_LIBDIR: ${{ env.CROSS_SYSROOT }}/usr/lib/pkgconfig
+      RUSTFLAGS: -C linker=/usr/bin/ld.lld
+      SYSROOT: /dummy  # workaround for https://github.com/rust-lang/pkg-config-rs/issues/102
+    run: |
+      # Workaround for https://github.com/rust-lang/pkg-config-rs/issues/102.
+      echo -e '#!/bin/sh\nPKG_CONFIG_SYSROOT_DIR=${{ env.CROSS_SYSROOT }} exec pkgconf "$@"' \
+          | install -m755 /dev/stdin pkg-config
+      export PKG_CONFIG="$(pwd)/pkg-config"
+      cargo build --release --locked --verbose
+    shell: alpine.sh {0}
+
+  - name: Try to run the binary
+    run: ./myapp --version
+    working-directory: target/${{ matrix.rust-target }}/release
+    shell: alpine-target.sh {0}
+----
 
 
 == License
