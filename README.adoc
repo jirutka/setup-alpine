@@ -1,7 +1,7 @@
 = GitHub Action: Setup Alpine Linux
 :proj-name: setup-alpine
 :gh-name: jirutka/{proj-name}
-:gh-branch: master
+:gh-branch: v1
 :action-ref: {gh-name}@{gh-branch}
 :alpine-latest: v3.15
 :apk-tools: https://gitlab.alpinelinux.org/alpine/apk-tools/[apk-tools]
