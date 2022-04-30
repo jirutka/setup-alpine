@@ -273,7 +273,7 @@ cat > .setup.sh <<-EOF
 
 	echo '> Installing required packages'
 	apk update
-	apk add $INPUT_PACKAGES
+	apk add $(printf '%s ' $INPUT_PACKAGES)
 
 	echo "> Creating user $SUDO_USER"
 	adduser -u "${SUDO_UID:-1000}" -G users -s /bin/sh -D "$SUDO_USER"
