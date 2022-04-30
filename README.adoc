@@ -1,9 +1,47 @@
-= Setup Alpine GitHub Action
+= GitHub Action: Setup Alpine Linux
 :proj-name: setup-alpine
 :gh-name: jirutka/{proj-name}
 :gh-branch: master
 :action-ref: {gh-name}@{gh-branch}
 :alpine-latest: v3.15
+:apk-tools: https://gitlab.alpinelinux.org/alpine/apk-tools/[apk-tools]
+
+A https://github.com/features/actions[GitHub Action] to easily set up and use a chroot-based footnote:[If you don’t know what https://en.wikipedia.org/wiki/Chroot[chroot] is, think of it as a very simple container. It’s one of the cornerstones of containers and the only one that is actually needed for this use case.] https://alpinelinux.org/[Alpine Linux] environment in your workflows and emulate any supported CPU architecture (using QEMU).
+
+
+[source, yaml, subs="+attributes"]
+----
+runs-on: ubuntu-latest
+steps:
+  - uses: {action-ref}
+    with:
+      branch: {alpine-latest}
+
+  - run: cat /etc/alpine-release
+    shell: alpine.sh {0}
+----
+_See <<examples, more examples>>…_
+
+
+== Highlights
+
+* *Easy to use and flexible*
+** Add one _step_ `uses: {action-ref}` to set up the Alpine environment, for the next steps that should run in this environment, specify `shell: alpine.sh {0}`. See <<examples>> for more.
+** You can switch between one, or even more, Alpine environments and the host system (Ubuntu) within a single _job_ (i.e. each _step_ can run in a different environment). This is ideal, for example, for <<cross-compile-rust, cross-compilations>>.
+
+* *Emulation of non-x86 architectures*
+** This couldn’t be easier; just specify input parameter <<arch>>. The _action_ sets up QEMU user space emulator and installs Alpine Linux environment for the specified architecture. You can then build and run binaries for/from this architecture, just like on real hardware, but (significantly) slower (it’s a software _emulation_ after all).
+
+* *No hassle with Docker images*
+** You don’t have to write any Dockerfiles, for example, to cross-compile Rust crates with C dependencies.footnote:[The popular https://github.com/cross-rs/cross[cross] tool used by https://github.com/actions-rs/cargo#cross-compilation[actions-rs/cargo] action doesn’t allow you to easily install additional packages or whatever needed for building your crate without creating, build and maintaining custom Docker images (https://github.com/cross-rs/cross/issues/281[cross-rs/cross#281]). This just impose unnecessary complexity and boilerplate.]
+** No, you really don’t need any so-called “official” Docker image for gcc, nodejs, python or whatever you need… just install it using https://www.mankier.com/8/apk[apk] from https://pkgs.alpinelinux.org/packages[Alpine packages]. It is fast, really fast!
+
+* *Always up to date environment*
+** The whole environment, all packages, are always installed directly from the Alpine Linux’s official repositories using {apk-tools} (Alpine’s package manager). There’s no intermediate layer that tends to lang behind with security fixes (such as Docker images). — You might be thinking, isn’t that slow? No, it’s faster than pulling a Docker image!
+** No, you really don’t need any Docker image to get a stable build environment. Alpine Linux provides stable https://alpinelinux.org/releases/[releases] (branches); these get just (security) fixes, no breaking changes.
+
+* *It’s simple and lightweight*
+** You don’t have to worry about that on a hosted CI service, but still… This _action_ is written in ~220 LoC and uses only basic Unix tools (chroot, mount, wget, Bash, …) and {apk-tools} (Alpine’s package manager). That’s it.
 
 
 == Parameters
@@ -17,7 +55,7 @@ This should normally be left at the default value.
 +
 Default: _see link:action.yml[]_
 
-arch::
+[[arch]] arch::
 CPU architecture to emulate using https://www.qemu.org/docs/master/user/main.html[QEMU user space emulator].
 Allowed values are: `x86_64` (native), `x86` (native), `aarch64`, `armhf` footnote:[armhf is armv6 with hard-float.], `armv7`, `ppc64le`, `riscv64` footnote:[riscv64 is available only for branch `edge` for now.], and `s390x`.
 +
@@ -68,6 +106,7 @@ root-path::
 Path to the created Alpine root directory.
 
 
+[[examples]]
 == Usage examples
 
 === Basic usage
@@ -175,6 +214,7 @@ steps:
 ----
 
 
+[[cross-compile-rust]]
 === Cross-compile Rust application with system libraries
 
 [source, yaml, subs="+attributes"]
@@ -238,6 +278,13 @@ steps:
     working-directory: target/${{ matrix.rust-target }}/release
     shell: alpine-target.sh {0}
 ----
+
+
+== History
+
+This _action_ is an evolution of the https://github.com/alpinelinux/alpine-chroot-install[alpine-chroot-install] script I originally wrote for Travis CI in 2016.
+The implementation is principally the same, but tailored to GitHub Actions.
+It’s so simple and fast thanks to how awesome {apk-tools} is!
 
 
 == License
