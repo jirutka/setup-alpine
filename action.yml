@@ -1,6 +1,7 @@
-name: Setup Alpine Linux
-description: Setup Alpine Linux (WIP)
-author: Jakub Jirutka <jakub@jirutka.cz>
+name: Setup Alpine Linux environment
+description: >
+  Set up a chroot-based Alpine Linux environment and optionally QEMU user emulator for non-x86 architectures.
+author: Jakub Jirutka
 branding:
   color: blue
   icon: terminal
