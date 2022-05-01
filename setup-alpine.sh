@@ -273,10 +273,10 @@ if [ "$INPUT_PACKAGES" ]; then
 	group 'Install packages'
 
 	pkgs=$(printf '%s ' $INPUT_PACKAGES)
-	cat > .setup.sh <<-EOF
+	cat > .setup.sh <<-SHELL
 		echo '▷ Installing $pkgs'
 		apk add --update-cache $pkgs
-	EOF
+	SHELL
 	abin/"$INPUT_SHELL_NAME" --root /.setup.sh
 fi
 
@@ -284,7 +284,7 @@ fi
 #-----------------------------------------------------------------------
 group "Set up user $SUDO_USER"
 
-cat > .setup.sh <<-EOF
+cat > .setup.sh <<-SHELL
 	echo '▷ Creating user $SUDO_USER with uid ${SUDO_UID:-1000}'
 	adduser -u '${SUDO_UID:-1000}' -G users -s /bin/sh -D '$SUDO_USER'
 
@@ -296,7 +296,7 @@ cat > .setup.sh <<-EOF
 		echo '▷ Adding doas rule:'
 		echo 'permit nopass keepenv $SUDO_USER' | tee /etc/doas.d/root.conf
 	fi
-EOF
+SHELL
 abin/"$INPUT_SHELL_NAME" --root /.setup.sh
 
 rm .setup.sh
