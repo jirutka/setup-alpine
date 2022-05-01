@@ -207,7 +207,7 @@ group "Initialize Alpine Linux $INPUT_BRANCH ($INPUT_ARCH)"
 
 cd "$rootfs_dir"
 
-info "Creating /etc/apk/repositories:"
+info 'Creating /etc/apk/repositories:'
 mkdir -p etc/apk
 printf '%s\n' \
 	"$INPUT_MIRROR_URL/$INPUT_BRANCH/main" \
@@ -229,7 +229,7 @@ $APK add \
 
 # This package contains /etc/os-release, /etc/alpine-release and /etc/issue,
 # but we don't wanna install all its dependencies (e.g. openrc).
-info "Fetching and unpacking /etc from alpine-base"
+info 'Fetching and unpacking /etc from alpine-base'
 $APK fetch \
 	--root . \
 	--no-progress \
@@ -285,16 +285,16 @@ fi
 group "Set up user $SUDO_USER"
 
 cat > .setup.sh <<-EOF
-	echo "▷ Creating user $SUDO_USER with uid ${SUDO_UID:-1000}"
-	adduser -u "${SUDO_UID:-1000}" -G users -s /bin/sh -D "$SUDO_USER"
+	echo '▷ Creating user $SUDO_USER with uid ${SUDO_UID:-1000}'
+	adduser -u '${SUDO_UID:-1000}' -G users -s /bin/sh -D '$SUDO_USER'
 
 	if [ -d /etc/sudoers.d ]; then
 		echo '▷ Adding sudo rule:'
-		echo "$SUDO_USER ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/root
+		echo '$SUDO_USER ALL=(ALL) NOPASSWD: ALL' | tee /etc/sudoers.d/root
 	fi
 	if [ -d /etc/doas.d ]; then
 		echo '▷ Adding doas rule:'
-		echo "permit nopass keepenv $SUDO_USER" | tee /etc/doas.d/root.conf
+		echo 'permit nopass keepenv $SUDO_USER' | tee /etc/doas.d/root.conf
 	fi
 EOF
 abin/"$INPUT_SHELL_NAME" --root /.setup.sh
