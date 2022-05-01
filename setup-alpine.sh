@@ -51,7 +51,7 @@ die() {
 }
 
 info() {
-	printf '> %s\n' "$@"
+	printf '▷ %s\n' "$@"
 }
 
 # Creates an expandable group in the log with title $1.
@@ -274,7 +274,7 @@ if [ "$INPUT_PACKAGES" ]; then
 
 	pkgs=$(printf '%s ' $INPUT_PACKAGES)
 	cat > .setup.sh <<-EOF
-		echo '> Installing $pkgs'
+		echo '▷ Installing $pkgs'
 		apk add --update-cache $pkgs
 	EOF
 	abin/"$INPUT_SHELL_NAME" --root /.setup.sh
@@ -285,15 +285,15 @@ fi
 group "Set up user $SUDO_USER"
 
 cat > .setup.sh <<-EOF
-	echo "> Creating user $SUDO_USER with uid ${SUDO_UID:-1000}"
+	echo "▷ Creating user $SUDO_USER with uid ${SUDO_UID:-1000}"
 	adduser -u "${SUDO_UID:-1000}" -G users -s /bin/sh -D "$SUDO_USER"
 
 	if [ -d /etc/sudoers.d ]; then
-		echo '> Adding sudo rule:'
+		echo '▷ Adding sudo rule:'
 		echo "$SUDO_USER ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/root
 	fi
 	if [ -d /etc/doas.d ]; then
-		echo '> Adding doas rule:'
+		echo '▷ Adding doas rule:'
 		echo "permit nopass keepenv $SUDO_USER" | tee /etc/doas.d/root.conf
 	fi
 EOF
