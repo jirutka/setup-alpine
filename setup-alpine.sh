@@ -203,7 +203,7 @@ fi
 
 
 #-----------------------------------------------------------------------
-group "Install Alpine Linux $INPUT_BRANCH ($INPUT_ARCH)"
+group "Initialize Alpine Linux $INPUT_BRANCH ($INPUT_ARCH)"
 
 cd "$rootfs_dir"
 
@@ -262,20 +262,30 @@ done
 
 
 #-----------------------------------------------------------------------
-group 'Set up Alpine'
+group 'Copy action scripts'
 
 install -Dv -m755 "$SCRIPT_DIR"/alpine.sh abin/"$INPUT_SHELL_NAME"
 install -Dv -m755 "$SCRIPT_DIR"/destroy.sh .
 
-info 'Running setup script in the chroot'
+
+#-----------------------------------------------------------------------
+if [ "$INPUT_PACKAGES" ]; then
+	group 'Install packages'
+
+	pkgs=$(printf '%s ' $INPUT_PACKAGES)
+	cat > .setup.sh <<-EOF
+		echo '> Installing $pkgs'
+		apk add --update-cache $pkgs
+	EOF
+	abin/"$INPUT_SHELL_NAME" --root /.setup.sh
+fi
+
+
+#-----------------------------------------------------------------------
+group "Set up user $SUDO_USER"
+
 cat > .setup.sh <<-EOF
-	set -e
-
-	echo '> Installing required packages'
-	apk update
-	apk add $(printf '%s ' $INPUT_PACKAGES)
-
-	echo "> Creating user $SUDO_USER"
+	echo "> Creating user $SUDO_USER with uid ${SUDO_UID:-1000}"
 	adduser -u "${SUDO_UID:-1000}" -G users -s /bin/sh -D "$SUDO_USER"
 
 	if [ -d /etc/sudoers.d ]; then
@@ -288,8 +298,8 @@ cat > .setup.sh <<-EOF
 	fi
 EOF
 abin/"$INPUT_SHELL_NAME" --root /.setup.sh
-rm .setup.sh
 
+rm .setup.sh
 endgroup
 #-----------------------------------------------------------------------
 
