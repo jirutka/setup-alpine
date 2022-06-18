@@ -5,6 +5,7 @@
 # - INPUT_APK_TOOLS_URL
 # - INPUT_ARCH
 # - INPUT_BRANCH
+# - INPUT_EXTRA_KEYS
 # - INPUT_EXTRA_REPOSITORIES
 # - INPUT_MIRROR_URL
 # - INPUT_PACKAGES
@@ -137,6 +138,13 @@ case "$INPUT_BRANCH" in
 	       "Expected 'v[0-9].[0-9]+' (e.g. v3.15), edge, or latest-stable, but got: $INPUT_BRANCH."
 esac
 
+for path in $INPUT_EXTRA_KEYS; do
+	if ! [ -r "$GITHUB_WORKSPACE/$path" ]; then
+		die 'Invalid input parameter: extra-keys' \
+		    "File does not exist in workspace or is not readable: $path."
+	fi
+done
+
 if ! expr "$INPUT_SHELL_NAME" : [a-zA-Z][a-zA-Z0-9_.~+@%-]*$ >/dev/null; then
 	die 'Invalid input parameter: shell-name' \
 	    "Expected value matching regex ^[a-zA-Z][a-zA-Z0-9_.~+@%-]*$, but got: $INPUT_SHELL_NAME."
@@ -216,6 +224,11 @@ printf '%s\n' \
 	| tee etc/apk/repositories
 
 cp -r "$SCRIPT_DIR"/keys etc/apk/
+
+for path in $INPUT_EXTRA_KEYS; do
+	cp "$GITHUB_WORKSPACE/$path" etc/apk/keys/
+done
+
 cat /etc/resolv.conf > etc/resolv.conf
 
 info "Installing base packages into $(pwd)"

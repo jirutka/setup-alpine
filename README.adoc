@@ -67,6 +67,12 @@ Alpine branch (aka release) to install: `vMAJOR.MINOR`, `latest-stable`, or `edg
 Example: `{alpine-latest}` +
 Default: `latest-stable`
 
+extra-keys::
+A list of paths of additional trusted keys (for installing packages from the _extra-repositories_) to copy into _/etc/apk/keys/_.
+The paths should be relative to the workspace directory (the default location of your repository when using the checkout action).
++
+Example: `.keys/pkgs@example.org-56d0d9fd.rsa.pub`
+
 extra-repositories::
 A list of additional Alpine repositories to add into _/etc/apk/repositories_ (Alpine’s official _main_ and _community_ repositories are always added).
 +

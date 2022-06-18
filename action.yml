@@ -24,6 +24,13 @@ inputs:
     description: Alpine branch (aka release) to install (e.g. `v3.15`, `latest-stable`, `edge`).
     required: false
     default: latest-stable
+  extra-keys:
+    description: >
+      A list of paths of additional trusted keys (for installing packages from the
+      extra-repositories) to copy into /etc/apk/keys/. The paths should be relative to the
+      workspace directory (the default location of your repository when using the checkout action).
+    required: false
+    default: ''
   extra-repositories:
     description: >
       A list of additional Alpine repositories to add into /etc/apk/repositories (Alpine's official
@@ -71,6 +78,7 @@ runs:
         INPUT_APK_TOOLS_URL: ${{ inputs.apk-tools-url }}
         INPUT_ARCH: ${{ inputs.arch }}
         INPUT_BRANCH: ${{ inputs.branch }}
+        INPUT_EXTRA_KEYS: ${{ inputs.extra-keys }}
         INPUT_EXTRA_REPOSITORIES: ${{ inputs.extra-repositories }}
         INPUT_MIRROR_URL: ${{ inputs.mirror-url }}
         INPUT_PACKAGES: ${{ inputs.packages }}
