@@ -231,6 +231,12 @@ done
 
 cat /etc/resolv.conf > etc/resolv.conf
 
+release_pkg=''
+# TODO: Add latest-stable after v3.17 is released.
+if [ "$INPUT_BRANCH" = 'edge' ] || [ "$($APK version -t "$INPUT_BRANCH" 'v3.16')" = '>' ]; then
+	release_pkg='alpine-release'
+fi
+
 info "Installing base packages into $(pwd)"
 $APK add \
 	--root . \
@@ -238,17 +244,19 @@ $APK add \
 	--no-progress \
 	--update-cache \
 	--arch "$INPUT_ARCH" \
-	$ALPINE_BASE_PKGS
+	$ALPINE_BASE_PKGS $release_pkg
 
-# This package contains /etc/os-release, /etc/alpine-release and /etc/issue,
-# but we don't wanna install all its dependencies (e.g. openrc).
-info 'Fetching and unpacking /etc from alpine-base'
-$APK fetch \
-	--root . \
-	--no-progress \
-	--stdout \
-	alpine-base \
-	| unpack_apk etc
+if ! [ "$release_pkg" ]; then
+	# This package contains /etc/os-release, /etc/alpine-release and /etc/issue,
+	# but we don't wanna install all its dependencies (e.g. openrc).
+	info 'Fetching and unpacking /etc from alpine-base'
+	$APK fetch \
+		--root . \
+		--no-progress \
+		--stdout \
+		alpine-base \
+		| unpack_apk etc
+fi
 
 
 #-----------------------------------------------------------------------
