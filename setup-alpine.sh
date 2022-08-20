@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# vim: set ts=4:
+# vim: set ts=4 sw=4:
 #
 # Required environment variables:
 # - INPUT_APK_TOOLS_URL

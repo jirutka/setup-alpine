@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# vim: set ts=4:
+# vim: set ts=4 sw=4:
 set -eo pipefail
 
 readonly SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
