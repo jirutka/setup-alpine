@@ -324,5 +324,5 @@ rm .setup.sh
 endgroup
 #-----------------------------------------------------------------------
 
-echo "::set-output name=root-path::$rootfs_dir"
+echo "root-path=$rootfs_dir" >> $GITHUB_OUTPUT
 echo "$rootfs_dir/abin" >> $GITHUB_PATH
