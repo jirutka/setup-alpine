@@ -231,10 +231,9 @@ done
 
 cat /etc/resolv.conf > etc/resolv.conf
 
-release_pkg=''
-# TODO: Add latest-stable after v3.17 is released.
-if [ "$INPUT_BRANCH" = 'edge' ] || [ "$($APK version -t "$INPUT_BRANCH" 'v3.16')" = '>' ]; then
-	release_pkg='alpine-release'
+release_pkg='alpine-release'
+if [ "${INPUT_BRANCH#v}" != "$INPUT_BRANCH" ] && [ "$($APK version -t "$INPUT_BRANCH" 'v3.17')" = '<' ]; then
+	release_pkg=''
 fi
 
 info "Installing base packages into $(pwd)"
