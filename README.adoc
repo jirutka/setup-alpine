@@ -198,7 +198,7 @@ steps:
   - name: Setup latest Alpine Linux for x86_64
     uses: {action-ref}
     with:
-      shell-name: alpine-aarch64.sh
+      shell-name: alpine-x86_64.sh
 
   - name: Setup latest Alpine Linux for aarch64
     uses: {action-ref}
