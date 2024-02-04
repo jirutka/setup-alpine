@@ -12,7 +12,7 @@ inputs:
       hash of the file.
       This should normally be left at the default value.
     required: false
-    default: https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.12.9/x86_64/apk.static#!sha256!5176da3d4c41f12a08b82809aca8e7e2e383b7930979651b8958eca219815af5
+    default: https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.14.0/x86_64/apk.static#!sha256!1c65115a425d049590bec7c729c7fd88357fbb090a6fc8c31d834d7b0bc7d6f2
   arch:
     description: >
       CPU architecture to emulate using QEMU. Allowed values are: `x86_64` (native), `x86` (native),
