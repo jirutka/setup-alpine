@@ -16,8 +16,7 @@ inputs:
   arch:
     description: >
       CPU architecture to emulate using QEMU. Allowed values are: `x86_64` (native), `x86` (native),
-      `aarch64`, `armhf` (armv6 with hard-float), `armv7`, `ppc64le`, `riscv64` (available only
-      for branch `edge`), and `s390x`
+      `aarch64`, `armhf` (armv6 with hard-float), `armv7`, `ppc64le`, `riscv64` (available since v3.20), and `s390x`
     required: false
     default: x86_64
   branch:
