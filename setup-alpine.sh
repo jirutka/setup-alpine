@@ -77,6 +77,17 @@ qemu_arch() {
 	esac
 }
 
+# Returns 0 if arch $1 is not compatible with the host architecture and needs
+# to be emulated.
+needs_emulator() {
+	local target="$(qemu_arch "$1")"
+	local host="$(qemu_arch "$(uname -m)")"
+
+	[ "$target" = "$host" ] && return 1
+	[ "$host" = x86_64 ] && [ "$target" = i386 ] && return 1
+	return 0
+}
+
 # Downloads a file from URL $1 to path $2 and verify its integrity.
 # URL must end with '#!sha256!' followed by a SHA-256 checksum of the file.
 download_file() {
@@ -178,7 +189,7 @@ chmod +x "$APK"
 
 
 #-----------------------------------------------------------------------
-if [[ "$INPUT_ARCH" != x86* ]]; then
+if needs_emulator "$INPUT_ARCH"; then
 	qemu_arch=$(qemu_arch "$INPUT_ARCH")
 	qemu_cmd="qemu-$qemu_arch"
 
