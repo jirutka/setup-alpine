@@ -3,7 +3,6 @@ on: push
 
 jobs:
   test-base:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         alpine:
@@ -12,6 +11,11 @@ jobs:
         arch:
           - x86_64
           - aarch64  # emulated
+        host-os:
+          - ubuntu-latest
+          - ubuntu-24.04
+          - ubuntu-22.04
+    runs-on: ${{ matrix.host-os }}
     env:
       MY_JOB_VAR: 'allons-y!'
     steps:
