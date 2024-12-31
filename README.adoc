@@ -57,7 +57,7 @@ Default: _see link:action.yml[]_
 
 [[arch]] arch::
 CPU architecture to emulate using https://www.qemu.org/docs/master/user/main.html[QEMU user space emulator].
-Allowed values are: `x86_64` (native), `x86` (native), `aarch64`, `armhf` footnote:[armhf is armv6 with hard-float.], `armv7`, `ppc64le`, `riscv64` footnote:[riscv64 is available since v3.20.], and `s390x`.
+Allowed values are: `x86_64` (native), `x86` (native), `aarch64`, `armhf` footnote:[armhf is armv6 with hard-float.], `armv7`, `loongarch64` footnote:[loongarch64 is available since v3.21.], `ppc64le`, `riscv64` footnote:[riscv64 is available since v3.20.], and `s390x`.
 +
 Default: `x86_64`
 
