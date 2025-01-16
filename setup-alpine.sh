@@ -84,6 +84,7 @@ needs_emulator() {
 	local host="$(qemu_arch "$(uname -m)")"
 
 	[ "$target" = "$host" ] && return 1
+	[ "$host" = aarch64 ] && [ "$target" = arm ] && return 1
 	[ "$host" = x86_64 ] && [ "$target" = i386 ] && return 1
 	return 0
 }
@@ -133,12 +134,22 @@ mount_bind() {
 
 case "$INPUT_APK_TOOLS_URL" in
 	https://*\#\!sha256\!* | http://*\#\!sha256\!*) ;;  # valid
+	"")
+		# default
+		case "$(uname -m)" in
+			x86_64) INPUT_APK_TOOLS_URL="https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.14.7/x86_64/apk.static#!sha256!bdd044e0fd6cc388c5e571e1093efa5f35f7767cc5aa338b0a2576a429009a62" ;;
+			aarch64) INPUT_APK_TOOLS_URL="https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.14.7/aarch64/apk.static#!sha256!27a975638ddc95a411c9f17c63383e335da9edf6bb7de2281d950c291a11f878" ;;
+			*) die "Runner has unexpected CPU architecture $(uname -m)" \
+				"Manually configure apk-tools-url for the runner's CPU architecture." ;;
+		esac
+		;;
 	*) die 'Invalid input parameter: apk-tools-url' \
 	       "The value must start with https:// or http:// and end with '#!sha256!' followed by a SHA-256 hash of the file to be downloaded, but got: $INPUT_APK_TOOLS_URL"
 esac
 
 case "$INPUT_ARCH" in
 	x86_64 | x86 | aarch64 | armhf | armv7 | loongarch64 | ppc64le | riscv64 | s390x) ;;  # valid
+	"") INPUT_ARCH="$(uname -m)" ;;  # default
 	*) die 'Invalid input parameter: arch' \
 	       "Expected one of: x86_64, x86, aarch64, armhf, armv7, loongarch64, ppc64le, riscv64, s390x, but got: $INPUT_ARCH."
 esac
