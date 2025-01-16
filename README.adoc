@@ -53,13 +53,13 @@ URL of the apk-tools static binary to use.
 It must end with `#!sha256!` followed by a SHA-256 hash of the file.
 This should normally be left at the default value.
 +
-Default: _see link:action.yml[]_
+Default: _see link:setup-alpine.sh[]_
 
 [[arch]] arch::
 CPU architecture to emulate using https://www.qemu.org/docs/master/user/main.html[QEMU user space emulator].
-Allowed values are: `x86_64` (native), `x86` (native), `aarch64`, `armhf` footnote:[armhf is armv6 with hard-float.], `armv7`, `loongarch64` footnote:[loongarch64 is available since v3.21.], `ppc64le`, `riscv64` footnote:[riscv64 is available since v3.20.], and `s390x`.
+Allowed values are: `x86_64` (native on x86_64), `x86` (native on x86_64), `aarch64` (native on aarch64), `armhf` footnote:[armhf is armv6 with hard-float.] (native on aarch64), `armv7` (native on aarch64), `loongarch64` footnote:[loongarch64 is available since v3.21.], `ppc64le`, `riscv64` footnote:[riscv64 is available since v3.20.], and `s390x`.
 +
-Default: `x86_64`
+Default: _runner's native architecture_
 
 branch::
 Alpine branch (aka release) to install: `vMAJOR.MINOR`, `latest-stable`, or `edge`.
@@ -159,19 +159,34 @@ steps:
 ----
 
 
+=== Set up and use Alpine natively on aarch64
+
+[source, yaml, subs="+attributes"]
+----
+runs-on: ubuntu-24.04-arm
+steps:
+  - name: Setup latest Alpine Linux
+    uses: {action-ref}
+
+  - name: Run script inside Alpine chroot
+    run: uname -m
+    shell: alpine.sh {0}
+----
+
+
 === Set up and use Alpine for a different CPU architecture
 
 [source, yaml, subs="+attributes"]
 ----
 runs-on: ubuntu-latest
 steps:
-  - name: Setup Alpine Linux {alpine-latest} for aarch64
+  - name: Setup Alpine Linux {alpine-latest} for ppc64le
     uses: {action-ref}
     with:
-      arch: aarch64
+      arch: ppc64le
       branch: {alpine-latest}
 
-  - name: Run script inside Alpine chroot with aarch64 emulation
+  - name: Run script inside Alpine chroot with ppc64le emulation
     run: uname -m
     shell: alpine.sh {0}
 ----
@@ -200,19 +215,19 @@ steps:
     with:
       shell-name: alpine-x86_64.sh
 
-  - name: Setup latest Alpine Linux for aarch64
+  - name: Setup latest Alpine Linux for ppc64le
     uses: {action-ref}
     with:
-      arch: aarch64
-      shell-name: alpine-aarch64.sh
+      arch: ppc64le
+      shell-name: alpine-ppc64le.sh
 
   - name: Run script inside Alpine chroot
     run: uname -m
     shell: alpine-x86_64.sh {0}
 
-  - name: Run script inside Alpine chroot with aarch64 emulation
+  - name: Run script inside Alpine chroot with ppc64le emulation
     run: uname -m
-    shell: alpine-aarch64.sh {0}
+    shell: alpine-ppc64le.sh {0}
 
   - name: Run script on the host system (Ubuntu)
     run: cat /etc/os-release
@@ -229,8 +244,8 @@ runs-on: ubuntu-latest
 strategy:
   matrix:
     include:
-      - rust-target: aarch64-unknown-linux-musl
-        os-arch: aarch64
+      - rust-target: ppc64le-unknown-linux-musl
+        os-arch: ppc64le
 env:
   CROSS_SYSROOT: /mnt/alpine-${{ matrix.os-arch }}
 steps:
