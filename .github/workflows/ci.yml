@@ -10,11 +10,13 @@ jobs:
           - edge
         arch:
           - x86_64
-          - aarch64  # emulated
+          - aarch64
         host-os:
           - ubuntu-latest
           - ubuntu-24.04
           - ubuntu-22.04
+          - ubuntu-24.04-arm
+          - ubuntu-22.04-arm
     runs-on: ${{ matrix.host-os }}
     env:
       MY_JOB_VAR: 'allons-y!'
@@ -86,7 +88,12 @@ jobs:
         run: test -f "${{ steps.setup-alpine.outputs.root-path }}"/etc/alpine-release
 
   test-multi:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.host-os }}
+    strategy:
+      matrix:
+        host-os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
 
