@@ -197,7 +197,7 @@ if needs_emulator "$INPUT_ARCH"; then
 
 	# TODO: Consider replacing it with a simple shell script to speed-up
 	#  the installation.
-	if ! command -V update-binfmts >/dev/null; then
+	if ! command -V update-binfmts 2>/dev/null; then
 		info 'Installing binfmt-support from Ubuntu repository'
 		apt-get install --no-install-recommends -y binfmt-support
 	fi
