@@ -20,7 +20,7 @@ jobs:
     env:
       MY_JOB_VAR: 'allons-y!'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Alpine Linux ${{ matrix.alpine }} ${{ matrix.arch }}
         uses: ./
@@ -93,7 +93,7 @@ jobs:
   test-multi:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install latest Alpine Linux x86_64
         uses: ./

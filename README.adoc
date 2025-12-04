@@ -121,7 +121,7 @@ Path to the created Alpine root directory.
 ----
 runs-on: ubuntu-latest
 steps:
-  - uses: actions/checkout@v2
+  - uses: actions/checkout@v4
 
   - name: Setup latest Alpine Linux
     uses: {action-ref}
@@ -234,7 +234,7 @@ strategy:
 env:
   CROSS_SYSROOT: /mnt/alpine-${{ matrix.os-arch }}
 steps:
-  - uses: actions/checkout@v1
+  - uses: actions/checkout@v4
 
   - name: Set up Alpine Linux for ${{ matrix.os-arch }} (target arch)
     id: alpine-target
