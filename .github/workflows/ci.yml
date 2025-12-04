@@ -86,6 +86,10 @@ jobs:
       - name: Check that steps.<step>.outputs.root-path is set and points to the chroot dir
         run: test -f "${{ steps.setup-alpine.outputs.root-path }}"/etc/alpine-release
 
+      - name: Check that apk works
+        run: apk add ruby
+        shell: alpine.sh --root {0}
+
   test-multi:
     runs-on: ubuntu-latest
     steps:
