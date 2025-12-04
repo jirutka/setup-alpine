@@ -8,6 +8,7 @@ jobs:
         alpine:
           - latest-stable
           - edge
+          - v3.10  # some old branch
         arch:
           - x86_64
           - aarch64  # emulated
