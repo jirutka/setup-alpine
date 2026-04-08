@@ -84,6 +84,7 @@ needs_emulator() {
 	local host="$(qemu_arch "$(uname -m)")"
 
 	[ "$target" = "$host" ] && return 1
+	[ "$host" = aarch64 ] && [ "$target" = arm ] && return 1
 	[ "$host" = x86_64 ] && [ "$target" = i386 ] && return 1
 	return 0
 }
