@@ -18,8 +18,8 @@ readonly SCRIPT_PATH=$(readlink -f "$0")
 readonly SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 readonly ALPINE_BASE_PKGS='alpine-baselayout apk-tools busybox busybox-suid musl-utils'
-readonly RUNNER_HOME="/home/$SUDO_USER"
-readonly ROOTFS_BASE_DIR="$RUNNER_HOME/rootfs"
+readonly WORK_ROOT="/home/$SUDO_USER/work"
+readonly ROOTFS_BASE_DIR="/home/$SUDO_USER/rootfs"
 
 
 err_handler() {
@@ -283,7 +283,13 @@ mkdir -p proc
 mount -v -t proc none proc
 mount_bind /dev dev
 mount_bind /sys sys
-mount_bind "$RUNNER_HOME/work" "${RUNNER_HOME#/}/work"
+if [ -e "$WORK_ROOT" ]; then
+	# may not exist on third-party runner images
+	mount_bind "$WORK_ROOT" "${WORK_ROOT#/}"
+fi
+# redundant but harmless if these are inside $WORK_ROOT
+mount_bind "$GITHUB_WORKSPACE" "${GITHUB_WORKSPACE#/}"
+mount_bind "$RUNNER_TEMP" "${RUNNER_TEMP#/}"
 
 # Some systems (Ubuntu?) symlinks /dev/shm to /run/shm.
 if [ -L /dev/shm ] && [ -d /run/shm ]; then

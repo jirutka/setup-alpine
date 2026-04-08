@@ -101,7 +101,9 @@ You can specify the source and destination path: `<src-dir>:<dest-dir>`.
 The `<src-dir>` is an absolute path of existing directory on the host system, `<dest-dir>` is an absolute path in the chroot (it will be created if doesn’t exist).
 You can omit the latter if they're the same.
 +
-Please note that _/home/runner/work_ (where’s your workspace located) is always mounted, don’t specify it here.
+Please note that _/home/runner/work_ (where your workspace and runner temp
+are located in GitHub's runner images) is always mounted if it exists, as
+are _$GITHUB_WORKSPACE_ and _$RUNNER_TEMP_; don’t specify them here.
 +
 Example: `${{ steps.alpine-aarch64.outputs.root-path }}:/mnt/alpine-aarch64`
 

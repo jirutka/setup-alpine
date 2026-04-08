@@ -58,8 +58,9 @@ inputs:
       existing directory on the host system, `<dest-dir>` is an absolute path in the chroot
       (it will be created if doesn't exist). You can omit the latter if they're the same.
 
-      Please note that /home/runner/work (where's your workspace located) is always mounted,
-      don't specify it here.
+      Please note that /home/runner/work (where your workspace and runner temp
+      are located in GitHub's runner images) is always mounted if it exists,
+      as are $GITHUB_WORKSPACE and $RUNNER_TEMP; don’t specify them here.
     required: false
     default: ''
 outputs:
