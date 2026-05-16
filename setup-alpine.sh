@@ -77,6 +77,17 @@ qemu_arch() {
 	esac
 }
 
+# Returns 0 if arch $1 is not compatible with the host architecture and needs
+# to be emulated.
+needs_emulator() {
+	local target="$(qemu_arch "$1")"
+	local host="$(qemu_arch "$(uname -m)")"
+
+	[ "$target" = "$host" ] && return 1
+	[ "$host" = x86_64 ] && [ "$target" = i386 ] && return 1
+	return 0
+}
+
 # Downloads a file from URL $1 to path $2 and verify its integrity.
 # URL must end with '#!sha256!' followed by a SHA-256 checksum of the file.
 download_file() {
@@ -127,9 +138,9 @@ case "$INPUT_APK_TOOLS_URL" in
 esac
 
 case "$INPUT_ARCH" in
-	x86_64 | x86 | aarch64 | armhf | armv7 | ppc64le | riscv64 | s390x) ;;  # valid
+	x86_64 | x86 | aarch64 | armhf | armv7 | loongarch64 | ppc64le | riscv64 | s390x) ;;  # valid
 	*) die 'Invalid input parameter: arch' \
-	       "Expected one of: x86_64, x86, aarch64, armhf, armv7, ppc64le, riscv64, s390x, but got: $INPUT_ARCH."
+	       "Expected one of: x86_64, x86, aarch64, armhf, armv7, loongarch64, ppc64le, riscv64, s390x, but got: $INPUT_ARCH."
 esac
 
 case "$INPUT_BRANCH" in
@@ -178,11 +189,18 @@ chmod +x "$APK"
 
 
 #-----------------------------------------------------------------------
-if [[ "$INPUT_ARCH" != x86* ]]; then
+if needs_emulator "$INPUT_ARCH"; then
 	qemu_arch=$(qemu_arch "$INPUT_ARCH")
 	qemu_cmd="qemu-$qemu_arch"
 
 	group "Install $qemu_cmd emulator"
+
+	# TODO: Consider replacing it with a simple shell script to speed-up
+	#  the installation.
+	if ! command -V update-binfmts >/dev/null 2>&1; then
+		info 'Installing binfmt-support from Ubuntu repository'
+		apt-get install --no-install-recommends -y binfmt-support
+	fi
 
 	if update-binfmts --display $qemu_cmd >/dev/null 2>&1; then
 		info "$qemu_cmd is already installed on the host system"
