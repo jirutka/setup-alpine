@@ -209,10 +209,10 @@ if needs_emulator "$INPUT_ARCH"; then
 		# apt-get is terribly slow - installing qemu-user-static via apt-get
 		# takes anywhere from ten seconds to tens of seconds. This method takes
 		# less than a second.
-		info "Fetching $qemu_cmd from the latest-stable Alpine repository"
+		info "Fetching $qemu_cmd from the $INPUT_QEMU_REPO Alpine repository"
 		$APK fetch \
 			--keys-dir "$SCRIPT_DIR"/keys \
-			--repository "$INPUT_MIRROR_URL/latest-stable/community" \
+			--repository "$INPUT_MIRROR_URL/$INPUT_QEMU_REPO/community" \
 			--no-progress \
 			--no-cache \
 			$qemu_cmd
