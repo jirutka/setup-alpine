@@ -1,5 +1,8 @@
 name: CI
-on: push
+on:
+  push:
+  # Lets a run be started by hand from the Actions tab (e.g. to re-test a branch).
+  workflow_dispatch:
 
 jobs:
   test-base:
